@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Text, useInput } from 'ink';
+import { Box, Text, useInput, useApp } from 'ink';
 import { Spinner } from '@inkjs/ui';
 import {
   runStartupSelfCheck,
@@ -16,17 +16,30 @@ type WelcomeScreenProps = {
 export function WelcomeScreen({ options, onReady }: WelcomeScreenProps) {
   const [result, setResult] = useState<StartupSelfCheckResult | null>(null);
   const [checking, setChecking] = useState(true);
+  const { exit } = useApp();
 
   useEffect(() => {
-    runStartupSelfCheck(options, getOpenRouterProvider()).then((r) => {
-      setResult(r);
-      setChecking(false);
-    });
+    runStartupSelfCheck(options, getOpenRouterProvider())
+      .then((r) => {
+        setResult(r);
+        setChecking(false);
+      })
+      .catch((error) => {
+        setResult({
+          canUseLLM: false,
+          offline: true,
+          message: `自检失败: ${error instanceof Error ? error.message : String(error)}`,
+        });
+        setChecking(false);
+      });
   }, []);
 
-  useInput((input) => {
+  useInput((input, key) => {
     if (input === '\r' && result) {
       onReady(result);
+    }
+    if (input === 'q' || key.escape) {
+      exit();
     }
   });
 

@@ -6,13 +6,17 @@ import { parseArgs, type CliOptions } from './agent';
 const options = parseArgs(process.argv.slice(2));
 
 if (options.selfCheckOnly) {
-  // For --self-check, just run and exit (keep existing behavior)
-  import('./agent').then(({ runStartupSelfCheck, getOpenRouterProvider }) => {
-    runStartupSelfCheck(options, getOpenRouterProvider()).then((result) => {
-      console.log(result.message);
-      process.exit(0);
+  import('./agent')
+    .then(({ runStartupSelfCheck, getOpenRouterProvider }) => {
+      runStartupSelfCheck(options, getOpenRouterProvider()).then((result) => {
+        console.log(result.message);
+        process.exit(0);
+      });
+    })
+    .catch((error) => {
+      console.error('启动失败:', error instanceof Error ? error.message : String(error));
+      process.exit(1);
     });
-  });
 } else {
   const { unmount } = render(
     <WelcomeScreen
