@@ -15,15 +15,19 @@ const icons: Record<StatusKind, string> = {
   error: '✗',
 };
 
-const colors: Record<StatusKind, (text: string) => React.ReactNode> = {
-  pending: (t) => <Text dimColor>{t}</Text>,
-  running: (t) => <Text color="yellow">{t}</Text>,
-  done: (t) => <Text color="green">{t}</Text>,
-  error: (t) => <Text color="red">{t}</Text>,
+const textProps: Record<StatusKind, React.ComponentProps<typeof Text>> = {
+  pending: { dimColor: true },
+  running: { color: 'yellow' },
+  done: { color: 'green' },
+  error: { color: 'red' },
 };
 
 export function StatusLine({ label, status }: StatusLineProps) {
   const icon = icons[status];
-  const colorFn = colors[status];
-  return <Text>{colorFn(`${icon}  ${label}`)}</Text>;
+  const props = textProps[status];
+  return (
+    <Text {...props}>
+      {icon} {label}
+    </Text>
+  );
 }
