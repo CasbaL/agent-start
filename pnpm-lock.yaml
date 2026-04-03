@@ -14,9 +14,6 @@ importers:
       '@openrouter/ai-sdk-provider':
         specifier: ^2.3.3
         version: 2.3.3(ai@6.0.145(zod@4.3.6))(zod@4.3.6)
-      '@types/react':
-        specifier: ^19.0.0
-        version: 19.2.14
       ai:
         specifier: ^6.0.145
         version: 6.0.145(zod@4.3.6)
@@ -39,6 +36,9 @@ importers:
       '@types/node':
         specifier: ^25.5.0
         version: 25.5.0
+      '@types/react':
+        specifier: ^19.0.0
+        version: 19.2.14
       prettier:
         specifier: ^3.8.1
         version: 3.8.1
