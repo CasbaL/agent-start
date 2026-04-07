@@ -17,7 +17,13 @@ type Screen =
   | { type: 'input' }
   | { type: 'processing'; userInput: string }
   | { type: 'results'; intent: UserIntent; matches: MatchedRepository[]; summary: string }
-  | { type: 'detail'; match: MatchedRepository }
+  | {
+      type: 'detail';
+      match: MatchedRepository;
+      intent: UserIntent;
+      matches: MatchedRepository[];
+      summary: string;
+    }
   | { type: 'exit' };
 
 type AppProps = {
@@ -28,11 +34,6 @@ export function App({ options }: AppProps) {
   const { exit } = useApp();
   const [screen, setScreen] = useState<Screen>({ type: 'welcome' });
   const [selfCheckResult, setSelfCheckResult] = useState<StartupSelfCheckResult | null>(null);
-  const [lastResults, setLastResults] = useState<{
-    intent: UserIntent;
-    matches: MatchedRepository[];
-    summary: string;
-  } | null>(null);
 
   if (options.selfCheckOnly) {
     return null;
@@ -66,39 +67,48 @@ export function App({ options }: AppProps) {
           userInput={screen.userInput}
           options={{ ...options, offline: selfCheckResult?.offline ?? options.offline }}
           onComplete={(intent, matches, summary) => {
-            setLastResults({ intent, matches, summary });
             setScreen({ type: 'results', intent, matches, summary });
           }}
           onError={() => setScreen({ type: 'input' })}
         />
       );
 
-    case 'results':
+    case 'results': {
+      const resultsData = {
+        intent: screen.intent,
+        matches: screen.matches,
+        summary: screen.summary,
+      };
       return (
         <ResultsScreen
           matches={screen.matches}
           intent={screen.intent}
           summary={screen.summary}
           onSelect={(index) => {
-            setScreen({ type: 'detail', match: screen.matches[index]! });
+            setScreen({
+              type: 'detail',
+              match: screen.matches[index]!,
+              intent: screen.intent,
+              matches: screen.matches,
+              summary: screen.summary,
+            });
           }}
           onExit={() => exit()}
         />
       );
+    }
 
     case 'detail':
       return (
         <DetailScreen
           match={screen.match}
           onBack={() => {
-            if (lastResults) {
-              setScreen({
-                type: 'results',
-                intent: lastResults.intent,
-                matches: lastResults.matches,
-                summary: lastResults.summary,
-              });
-            }
+            setScreen({
+              type: 'results',
+              intent: screen.intent,
+              matches: screen.matches,
+              summary: screen.summary,
+            });
           }}
           onExit={() => exit()}
         />

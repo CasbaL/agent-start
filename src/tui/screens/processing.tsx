@@ -30,17 +30,21 @@ export function ProcessingScreen({
   const [matchStatus, setMatchStatus] = useState<StepStatus>('pending');
   const [summaryStatus, setSummaryStatus] = useState<StepStatus>('pending');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const currentStepRef = React.useRef<'intent' | 'match' | 'summary'>('intent');
 
   const run = useCallback(async () => {
     try {
+      currentStepRef.current = 'intent';
       setIntentStatus('running');
       const intent = await analyzeIntent(userInput, options, getOpenRouterProvider());
       setIntentStatus('done');
 
+      currentStepRef.current = 'match';
       setMatchStatus('running');
       const matches = matchRepositories(intent);
       setMatchStatus('done');
 
+      currentStepRef.current = 'summary';
       setSummaryStatus('running');
       const summary = await summarizeMatches(
         userInput,
@@ -55,8 +59,8 @@ export function ProcessingScreen({
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
       setErrorMessage(msg);
-      if (intentStatus === 'running') setIntentStatus('error');
-      else if (matchStatus === 'running') setMatchStatus('error');
+      if (currentStepRef.current === 'intent') setIntentStatus('error');
+      else if (currentStepRef.current === 'match') setMatchStatus('error');
       else setSummaryStatus('error');
     }
   }, [userInput, options, onComplete]);

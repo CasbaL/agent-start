@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Text, useInput, useApp } from 'ink';
-import { Spinner } from '@inkjs/ui';
 import {
   runStartupSelfCheck,
   getOpenRouterProvider,
@@ -13,9 +12,12 @@ type WelcomeScreenProps = {
   onReady: (result: StartupSelfCheckResult) => void;
 };
 
+const SPINNER_FRAMES = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+
 export function WelcomeScreen({ options, onReady }: WelcomeScreenProps) {
   const [result, setResult] = useState<StartupSelfCheckResult | null>(null);
   const [checking, setChecking] = useState(true);
+  const [spinnerFrame, setSpinnerFrame] = useState(0);
   const { exit } = useApp();
 
   useEffect(() => {
@@ -33,6 +35,14 @@ export function WelcomeScreen({ options, onReady }: WelcomeScreenProps) {
         setChecking(false);
       });
   }, []);
+
+  useEffect(() => {
+    if (!checking) return;
+    const interval = setInterval(() => {
+      setSpinnerFrame((f) => (f + 1) % SPINNER_FRAMES.length);
+    }, 80);
+    return () => clearInterval(interval);
+  }, [checking]);
 
   useInput((input, key) => {
     if (input === '\r' && result) {
@@ -53,8 +63,7 @@ export function WelcomeScreen({ options, onReady }: WelcomeScreenProps) {
       <Box flexDirection="column" marginLeft={2}>
         {checking ? (
           <Box>
-            <Text>启动自检</Text>
-            <Spinner label="" />
+            <Text>启动自检{SPINNER_FRAMES[spinnerFrame]}</Text>
           </Box>
         ) : result ? (
           <>
