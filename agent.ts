@@ -8,7 +8,7 @@ import 'dotenv/config';
 import { repositoryCatalog, type RepositoryRecord } from './repo-catalog';
 
 export const DEFAULT_MODEL = process.env.OPENROUTER_MODEL?.trim() || 'openrouter/free';
-const LLM_TIMEOUT_MS = 20_000;
+const LLM_TIMEOUT_MS = 60_000;
 const SLOW_STEP_NOTICE_MS = 4_000;
 
 export const intentSchema = z.object({
