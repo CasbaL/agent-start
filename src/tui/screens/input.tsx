@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Text, useInput, useApp } from 'ink';
+import { Box, Text, useInput } from 'ink';
 import { TextInput } from '@inkjs/ui';
 
 type InputScreenProps = {
@@ -8,9 +8,7 @@ type InputScreenProps = {
 };
 
 export function InputScreen({ onSubmit, onExit }: InputScreenProps) {
-  const { exit } = useApp();
-
-  useInput((input, key) => {
+  useInput((_input, key) => {
     if (key.escape) {
       onExit();
     }
@@ -28,7 +26,7 @@ export function InputScreen({ onSubmit, onExit }: InputScreenProps) {
         <Box marginTop={1}>
           <Text color="cyan">▸ </Text>
           <TextInput
-            onSubmit={(v) => {
+            onSubmit={(v: string) => {
               if (v.trim()) {
                 onSubmit(v.trim());
               }

@@ -6,6 +6,20 @@ import { parseArgs, type CliOptions, type StartupSelfCheckResult } from './agent
 
 const options = parseArgs(process.argv.slice(2));
 
+function createInputScreen(): void {
+  const { unmount } = render(
+    <InputScreen
+      onSubmit={() => {
+        unmount();
+      }}
+      onExit={() => {
+        unmount();
+      }}
+    />,
+    { exitOnCtrlC: true },
+  );
+}
+
 if (options.selfCheckOnly) {
   import('./agent')
     .then(({ runStartupSelfCheck, getOpenRouterProvider }) => {
@@ -19,38 +33,13 @@ if (options.selfCheckOnly) {
       process.exit(1);
     });
 } else if (options.userInput) {
-  const { unmount } = render(
-    <InputScreen
-      onSubmit={(input) => {
-        console.log('\n[debug] Input:', input);
-        unmount();
-      }}
-      onExit={() => {
-        console.log('\n[debug] Exit');
-        unmount();
-      }}
-    />,
-    { exitOnCtrlC: true },
-  );
+  createInputScreen();
 } else {
-  const { unmount } = render(
+  render(
     <WelcomeScreen
       options={options}
-      onReady={(result: StartupSelfCheckResult) => {
-        unmount();
-        const { unmount: unmountInput } = render(
-          <InputScreen
-            onSubmit={(input) => {
-              console.log('\n[debug] Input:', input);
-              unmountInput();
-            }}
-            onExit={() => {
-              console.log('\n[debug] Exit');
-              unmountInput();
-            }}
-          />,
-          { exitOnCtrlC: true },
-        );
+      onReady={(_result: StartupSelfCheckResult) => {
+        createInputScreen();
       }}
     />,
     { exitOnCtrlC: true },
