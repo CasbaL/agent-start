@@ -3,23 +3,55 @@ import { render } from 'ink';
 import { WelcomeScreen } from './src/tui/screens/welcome';
 import { InputScreen } from './src/tui/screens/input';
 import { ProcessingScreen } from './src/tui/screens/processing';
-import { parseArgs, type CliOptions, type StartupSelfCheckResult } from './agent';
+import { ResultsScreen } from './src/tui/screens/results';
+import {
+  parseArgs,
+  type CliOptions,
+  type StartupSelfCheckResult,
+  type UserIntent,
+  type MatchedRepository,
+} from './agent';
 
 const options = parseArgs(process.argv.slice(2));
 
-function createProcessingScreen(userInput: string, offline: boolean): void {
+function createResultsScreen(
+  intent: UserIntent,
+  matches: MatchedRepository[],
+  summary: string,
+  onBack: () => void,
+): void {
+  const { unmount } = render(
+    <ResultsScreen
+      matches={matches}
+      intent={intent}
+      summary={summary}
+      onSelect={(index: number) => {
+        console.log('\n=== 推荐结果 ===\n');
+        console.log(summary);
+        unmount();
+        onBack();
+      }}
+      onExit={() => {
+        unmount();
+      }}
+    />,
+    { exitOnCtrlC: true },
+  );
+}
+
+function createProcessingScreen(userInput: string, offline: boolean, onBack: () => void): void {
   const processingOptions: CliOptions = { ...options, offline };
   const { unmount } = render(
     <ProcessingScreen
       userInput={userInput}
       options={processingOptions}
       onComplete={(intent, matches, summary) => {
-        console.log('\n=== 推荐结果 ===\n');
-        console.log(summary);
         unmount();
+        createResultsScreen(intent, matches, summary, onBack);
       }}
       onError={() => {
         unmount();
+        onBack();
       }}
     />,
     { exitOnCtrlC: true },
@@ -55,7 +87,9 @@ if (options.selfCheckOnly) {
       process.exit(1);
     });
 } else if (options.userInput) {
-  createProcessingScreen(options.userInput, options.offline);
+  createProcessingScreen(options.userInput, options.offline, () => {
+    process.exit(0);
+  });
 } else {
   render(
     <WelcomeScreen
@@ -63,7 +97,18 @@ if (options.selfCheckOnly) {
       onReady={(result: StartupSelfCheckResult) => {
         createInputScreen(
           (input: string) => {
-            createProcessingScreen(input, result.offline);
+            createProcessingScreen(input, result.offline, () => {
+              createInputScreen(
+                (newInput: string) => {
+                  createProcessingScreen(newInput, options.offline, () => {
+                    process.exit(0);
+                  });
+                },
+                () => {
+                  process.exit(0);
+                },
+              );
+            });
           },
           () => {
             process.exit(0);
